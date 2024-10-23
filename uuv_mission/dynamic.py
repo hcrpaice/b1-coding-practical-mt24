@@ -62,6 +62,9 @@ class Trajectory:
         plt.legend(loc='upper right')
         plt.show()
 
+# i added the following line
+import csv
+
 @dataclass
 class Mission:
     reference: np.ndarray
@@ -74,8 +77,22 @@ class Mission:
         return cls(reference, cave_height, cave_depth)
 
     @classmethod
-    def from_csv(cls, file_name: str):
-        # You are required to implement this method
+    def from_csv(cls, file_name.csv: str):
+        # You are required to implement this method - beginning of what i added 
+        with open(file_name, mode='r') as file:
+            csv_reader = csv.reader(file)
+            # Assuming the CSV has headers and the relevant data is in the first row
+            headers = next(csv_reader)
+            data = next(csv_reader)
+
+            # Extract the relevant data from the CSV
+            reference = data[0]
+            cave_height = float(data[1])
+            cave_depth = float(data[2])
+
+            return cls(reference, cave_height, cave_depth)
+            # end of what i added 
+
         pass
 
 
