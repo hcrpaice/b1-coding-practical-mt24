@@ -2,7 +2,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from .terrain import generate_reference_and_limits
+from .control import controller
 
 class Submarine:
     def __init__(self):
@@ -26,6 +28,8 @@ class Submarine:
         force_y = -self.drag * self.vel_y + self.actuator_gain * (action + disturbance)
         acc_y = force_y / self.mass
         self.vel_y += acc_y * self.dt
+
+    
 
     def get_depth(self) -> float:
         return self.pos_y
@@ -62,7 +66,7 @@ class Trajectory:
         plt.legend(loc='upper right')
         plt.show()
 
-# i added the following line
+
 import csv
 
 @dataclass
@@ -77,29 +81,27 @@ class Mission:
         return cls(reference, cave_height, cave_depth)
 
     @classmethod
-    def from_csv(cls, file_name.csv: str):
-        # You are required to implement this method - beginning of what i added 
-        with open(file_name, mode='r') as file:
-            csv_reader = csv.reader(file)
-            # Assuming the CSV has headers and the relevant data is in the first row
-            headers = next(csv_reader)
-            data = next(csv_reader)
-
-            # Extract the relevant data from the CSV
-            reference = data[0]
-            cave_height = float(data[1])
-            cave_depth = float(data[2])
-
-            return cls(reference, cave_height, cave_depth)
-            # end of what i added 
+    def from_csv(cls, file_name: str): 
+        # You are required to implement this method
+        df = pd.read_csv(file_name)
+        # Extracting relevant data by heading from data file 
+        reference = df['reference'].to_numpy()
+        cave_height = df['cave_height'].to_numpy()
+        cave_depth = df['cave_depth'].to_numpy()
+        # Assign this method to class
+        return cls(reference, cave_height, cave_depth)
+        
+        
+        
 
         pass
 
 
 class ClosedLoop:
-    def __init__(self, plant: Submarine, controller):
+    def __init__(self, plant: Submarine, controller: controller):
         self.plant = plant
         self.controller = controller
+        
 
     def simulate(self,  mission: Mission, disturbances: np.ndarray) -> Trajectory:
 
@@ -115,6 +117,11 @@ class ClosedLoop:
             positions[t] = self.plant.get_position()
             observation_t = self.plant.get_depth()
             # Call your controller here
+            # Get the current reference signal 
+            reference_t = mission.reference[t]
+            # Call the controller to compute the control action
+            actions[t] = self.controller.position(reference_t, observation_t)
+            # Update the plant state with the control action and disturbances
             self.plant.transition(actions[t], disturbances[t])
 
         return Trajectory(positions)
