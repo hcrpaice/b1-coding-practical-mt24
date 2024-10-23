@@ -90,9 +90,6 @@ class Mission:
         cave_depth = df['cave_depth'].to_numpy()
         # Assign this method to class
         return cls(reference, cave_height, cave_depth)
-        
-        
-        
 
         pass
 
